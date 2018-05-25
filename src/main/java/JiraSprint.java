@@ -1,6 +1,11 @@
+import com.atlassian.jira.rest.client.api.domain.Issue;
+
+import java.util.List;
+
 public class JiraSprint {
     private String name;
-    private Integer remainingHours;
+    private Integer remainingMinutes;
+    private List<Issue> readyForTestingIssuesList;
 
     public String getName() {
         return name;
@@ -12,13 +17,21 @@ public class JiraSprint {
         return this;
     }
 
-    public Integer getRemainingHours() {
-        return remainingHours;
+    public Integer getRemainingMinutes() {
+        return remainingMinutes;
     }
 
-    public JiraSprint setRemainingHours(Integer remainingHours) {
-        this.remainingHours = remainingHours;
+    public JiraSprint setRemainingMinutes(Integer remainingMinutes) {
+        this.remainingMinutes = remainingMinutes;
 
         return this;
+    }
+
+    public List<Issue> getReadyForTestingIssuesList() {
+        return readyForTestingIssuesList;
+    }
+
+    public void setReadyForTestingIssuesList(List<Issue> readyForTestingIssuesList) {
+        this.readyForTestingIssuesList = readyForTestingIssuesList;
     }
 }
