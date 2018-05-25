@@ -88,4 +88,7 @@
         </pluginRepository>
     </pluginRepositories>
 
+    <build>
+        <defaultGoal>compile</defaultGoal>
+    </build>
 </project>
