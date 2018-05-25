@@ -1,21 +1,21 @@
 import java.util.ArrayList;
 
 public class TestingResource {
-    private String name;
+    private String userName;
     private Integer workload;
-    private ArrayList<String> stories=new ArrayList<>();
+    private ArrayList<String> currentStories =new ArrayList<>();
 
-    public String getStories() {
-        return String.join(",", this.stories);
+    public String getCurrentStories() {
+        return String.join(",", currentStories);
     }
 
     public TestingResource addStory(String stories) {
-        this.stories.add(stories);
+        currentStories.add(stories);
         return this;
     }
 
-    public TestingResource setName(String name) {
-        this.name = name;
+    public TestingResource setUserName(String userName) {
+        this.userName = userName;
         return this;
     }
 
@@ -25,8 +25,8 @@ public class TestingResource {
         return this;
     }
 
-    public String getName() {
-        return name;
+    public String getUserName() {
+        return userName;
     }
 
     public Integer getWorkload() {

@@ -6,45 +6,70 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BestTestingPath {
+    private static final String ISSUE_TYPE_TESTING_TASK = "15";
+    private static final String ISSUE_FIELD_REMAINING_ESTIMATE = "timeestimate";
     private JiraStory[] availableStories;
     private List<TestingResource> testingResources;
     private JiraSprint[] availableSprints;
 
-    BestTestingPath(){
-       testingResources = new ArrayList<>();
+    BestTestingPath() {
+        testingResources = new ArrayList<>();
     }
 
     public List<TestingResource> getTestingResources() {
         return testingResources;
     }
 
-    public void initialize() {
-        this.setTestingResources();
-        this.setAvailableStories();
+    private void setTestingResources() {
+        TestingResource testingResource0 = new TestingResource().setUserName("bogdan.popa1").setWorkload(0);
+        testingResources.add(testingResource0);
+        TestingResource testingResource1 = new TestingResource().setUserName("armando.gavrila").setWorkload(0);
+        testingResources.add(testingResource1);
+        TestingResource testingResource2 = new TestingResource().setUserName("gabriela.preda").setWorkload(0);
+        testingResources.add(testingResource2);
+        TestingResource testingResource3 = new TestingResource().setUserName("ciprian.nitu").setWorkload(0);
+        testingResources.add(testingResource3);
     }
 
-    private void setTestingResources() {
-        //TODO: Get the testing resources from Jira and assign them
+    public void initialize() {
+        setTestingResources();
+        getJiraDetailsForTestingResources();
+    }
+
+    private void getJiraDetailsForTestingResources() {
         JiraConnection jira = new JiraConnection();
+
+        for (TestingResource qaEngineer : testingResources) {
+            SearchResult result = getSearchResult(jira, qaEngineer);
+            if (result != null) {
+                setDetailsForTestingResource(qaEngineer, result);
+            }
+        }
+    }
+
+    private SearchResult getSearchResult(JiraConnection jira, TestingResource qaEngineer) {
         SearchResult result = null;
-        String name = "adrian.bratulescu";
         try {
-            result = jira.getIssues("assignee = " + name + " AND resolution = Unresolved");
+            result = jira.getIssues(
+                    "assignee = "
+                            + qaEngineer.getUserName()
+                            + " AND resolution = Unresolved AND issueType = "
+                            + ISSUE_TYPE_TESTING_TASK
+            );// AND  Testing
         } catch (Exception ex) {
             System.out.println("URI exception " + ex.getMessage());
         }
-        for (Issue issue: result.getIssues()) {
-            TestingResource testingResource = new TestingResource();
-            testingResource.setName(issue.getAssignee().getDisplayName())
-                    .setWorkload(0)
-                    .addStory(issue.getKey());
+        return result;
+    }
 
-            for(IssueField field: issue.getFields()) {
-                if(field.getId().equals("aggregatetimeoriginalestimate") && field.getValue() != null) {
-                    testingResource.setWorkload(testingResource.getWorkload() + ((Integer)field.getValue()));
+    private void setDetailsForTestingResource(TestingResource qaEngineer, SearchResult result) {
+        for (Issue issue : result.getIssues()) {
+            qaEngineer.addStory(issue.getKey());
+            for (IssueField field : issue.getFields()) {
+                if (field.getId().equals(ISSUE_FIELD_REMAINING_ESTIMATE) && field.getValue() != null) {
+                    qaEngineer.setWorkload(qaEngineer.getWorkload() + ((Integer) field.getValue()));
                 }
             }
-            testingResources.add(testingResource);
         }
     }
 
