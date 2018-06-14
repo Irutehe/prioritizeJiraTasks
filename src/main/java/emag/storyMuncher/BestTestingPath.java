@@ -10,13 +10,10 @@ import java.util.Comparator;
 import java.util.List;
 
 class BestTestingPath {
-    private static final Long ISSUE_TYPE_TESTING_TASK = Long.valueOf("15");
-    private static final String ISSUE_FIELD_REMAINING_ESTIMATE = "timeestimate";
-    private static final String ISSUE_FIELD_STORY_POINTS = "customfield_10023";
     private List<JiraStory> priorityCalculatedIssues;
     private List<TestingResource> testingResources;
     private List<JiraSprint> availableSprints;
-    private JiraConnection jira = new JiraConnection();
+    private JiraQueries jiraQueries = new JiraQueries();
 
     BestTestingPath() {
         testingResources = new ArrayList<>();
@@ -42,7 +39,7 @@ class BestTestingPath {
     void initialize() {
         setTestingResources();
         for (TestingResource qaEngineer : testingResources) {
-            SearchResult result = getSearchResultForOpenTestingIssues(qaEngineer);
+            SearchResult result = jiraQueries.getSearchResultForOpenTestingIssues(qaEngineer);
             if (result != null) {
                 setDetailsForTestingResource(qaEngineer, result);
             }
@@ -79,7 +76,7 @@ class BestTestingPath {
     }
 
     private void populatePriorityCalculatedIssues(JiraSprint sprint) {
-        SearchResult result = getSearchResultReadyForTestingIssues(sprint);
+        SearchResult result = jiraQueries.getSearchResultReadyForTestingIssues(sprint);
         if (result != null) {
             for (Issue issue : result.getIssues()) {
                 int storyEstimatedMinutes = getStoryEstimatedMinutes(issue);
@@ -112,7 +109,7 @@ class BestTestingPath {
     }
 
     private int getTaskEstimatedMinutes(int storyEstimatedMinutes, Issue testingIssue) {
-        IssueField field = testingIssue.getField(ISSUE_FIELD_REMAINING_ESTIMATE);
+        IssueField field = testingIssue.getField(JiraQueries.ISSUE_FIELD_REMAINING_ESTIMATE);
         if (field != null && field.getValue() != null) {
             storyEstimatedMinutes += ((Integer) field.getValue());
         }
@@ -124,71 +121,29 @@ class BestTestingPath {
         List<String> issueKeys = new ArrayList<>();
         if (subtasks != null) {
             for (Subtask subtask : subtasks) {
-                if (subtask.getIssueType().getId().equals(ISSUE_TYPE_TESTING_TASK)) {
+                if (subtask.getIssueType().getId().equals(JiraQueries.ISSUE_TYPE_TESTING_TASK)) {
                     issueKeys.add(subtask.getIssueKey());
                 }
             }
         }
 
-        SearchResult result = getIssuesByKey(issueKeys);
+        SearchResult result = jiraQueries.getIssuesByKey(issueKeys);
         return result.getIssues();
     }
 
     private Double getStoryPoints(Issue issue) {
         Double storyPoints = 0.00;
-        IssueField field = issue.getField(ISSUE_FIELD_STORY_POINTS);
+        IssueField field = issue.getField(JiraQueries.ISSUE_FIELD_STORY_POINTS);
         if (field != null && field.getValue() != null) {
             storyPoints = ((Double) field.getValue());
         }
         return storyPoints;
     }
 
-    private SearchResult getSearchResultReadyForTestingIssues(JiraSprint sprint) {
-        SearchResult result = null;
-        try {
-            result = jira.getIssues(
-                    "status = \"Ready for Testing\" " +
-                            "AND project = \"Supply Chain Management\" " +
-                            "AND sprint = \"" + sprint.getName() + "\""
-            );
-        } catch (Exception ex) {
-            System.out.println("URI exception " + ex.getMessage());
-        }
-        return result;
-    }
-
-    private SearchResult getIssuesByKey(List<String> issueKeys) {
-        SearchResult result = null;
-        try {
-            result = jira.getIssues(
-                    "key = " + String.join(" OR key = ", issueKeys)
-            );
-        } catch (Exception ex) {
-            System.out.println("URI exception " + ex.getMessage());
-        }
-        return result;
-    }
-
-    private SearchResult getSearchResultForOpenTestingIssues(TestingResource qaEngineer) {
-        SearchResult result = null;
-        try {
-            result = jira.getIssues(
-                    "assignee = "
-                            + qaEngineer.getUserName()
-                            + " AND resolution = Unresolved AND issueType = "
-                            + ISSUE_TYPE_TESTING_TASK
-                            + " AND project = \"Supply Chain Management\" "
-            );
-        } catch (Exception ex) {
-            System.out.println("URI exception " + ex.getMessage());
-        }
-        return result;
-    }
-
     private void setDetailsForTestingResource(TestingResource qaEngineer, SearchResult result) {
         for (Issue issue : result.getIssues()) {
             qaEngineer.addCurrentStory(issue.getKey());
-            IssueField field = issue.getField(ISSUE_FIELD_REMAINING_ESTIMATE);
+            IssueField field = issue.getField(JiraQueries.ISSUE_FIELD_REMAINING_ESTIMATE);
             if (field != null && field.getValue() != null) {
                 qaEngineer.addWorkload(qaEngineer.getWorkload() + ((Integer) field.getValue()));
             }
