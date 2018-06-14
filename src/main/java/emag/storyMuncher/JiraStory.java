@@ -1,38 +1,48 @@
+package emag.storyMuncher;
+
 public class JiraStory {
     private String storyId;
     private Integer estimatedTestingMinutes;
     private String sprint;
-    private float priority;
+    private Double priority;
 
-    public String getStoryId() {
+    String getStoryId() {
         return storyId;
     }
 
-    public void setStoryId(String storyId) {
+    JiraStory setStoryId(String storyId) {
         this.storyId = storyId;
+
+        return this;
     }
 
-    public Integer getEstimatedTestingMinutes() {
+    Integer getEstimatedTestingMinutes() {
         return estimatedTestingMinutes;
     }
 
-    public void setEstimatedTestingMinutes(Integer estimatedTestingMinutes) {
+    JiraStory setEstimatedTestingMinutes(Integer estimatedTestingMinutes) {
         this.estimatedTestingMinutes = estimatedTestingMinutes;
+
+        return this;
     }
 
     public String getSprint() {
         return sprint;
     }
 
-    public void setSprint(String sprint) {
+    JiraStory setSprint(String sprint) {
         this.sprint = sprint;
+
+        return this;
     }
 
-    public float getPriority() {
+    Double getPriority() {
         return priority;
     }
 
-    public void setPriority(float priority) {
+    JiraStory setPriority(Double priority) {
         this.priority = priority;
+
+        return this;
     }
 }

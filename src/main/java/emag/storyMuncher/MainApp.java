@@ -1,3 +1,5 @@
+package emag.storyMuncher;
+
 public class MainApp {
     public static void main(String[] args) {
         BestTestingPath bestTestingPath = new BestTestingPath();
@@ -6,7 +8,8 @@ public class MainApp {
             System.out.println(
                     "Current Workload for Name: " + resource.getUserName()
                             + " Current Stories: " + resource.getCurrentStories()
-                            + " Workload: " + resource.getWorkload());
+                            + " Future Stories: " + resource.getFutureStories()
+                            + " Workload: " + resource.getWorkload()/60/60 + "h");
         }
     }
 }

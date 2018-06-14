@@ -1,3 +1,5 @@
+package emag.storyMuncher;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
@@ -8,7 +10,7 @@ import com.atlassian.jira.rest.client.auth.AnonymousAuthenticationHandler;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 import com.atlassian.util.concurrent.Promise;
 
-public class JiraConnection {
+class JiraConnection {
     private JiraRestClient restClient;
 
     JiraConnection() {
@@ -22,7 +24,7 @@ public class JiraConnection {
         restClient = new AsynchronousJiraRestClientFactory().create(jiraServerUri, handler);
     }
 
-    public SearchResult getIssues(String jql) throws Exception {
+    SearchResult getIssues(String jql) throws Exception {
         Promise searchResultPromise = restClient.getSearchClient().searchJql(jql);
         return Optional.ofNullable((SearchResult) searchResultPromise.claim()).orElseThrow(() -> new Exception("No such issue"));
     }

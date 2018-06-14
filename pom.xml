@@ -18,7 +18,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>MainApp</mainClass>
+                            <mainClass>emag.storyMuncher.MainApp</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
