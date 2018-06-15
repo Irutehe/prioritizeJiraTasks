@@ -1,8 +1,7 @@
 package emag.storyMuncher;
 
 import java.io.*;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.charset.StandardCharsets;
 
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
@@ -21,8 +20,7 @@ class JsonFileIO {
         Config config = new Config();
 
         try {
-            JsonReader reader = new JsonReader(new FileReader(filepath));
-
+            InputStreamReader reader = new InputStreamReader(new FileInputStream(filepath), StandardCharsets.UTF_8);
             Gson gson = new Gson();
             config = gson.fromJson(reader, Config.class);
 
@@ -39,9 +37,9 @@ class JsonFileIO {
         Gson jsonObject = new Gson();
 
         try {
-            FileWriter file = new FileWriter(filepath);
-            file.write(jsonObject.toJson(config));
-            file.close();
+            OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(filepath), StandardCharsets.UTF_8);
+            writer.append(jsonObject.toJson(config));
+            writer.close();
             System.out.println("The Object  was succesfully written to a file");
         } catch (Exception ex) {
             ex.printStackTrace();
