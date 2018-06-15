@@ -28,6 +28,5 @@ class JiraConnection {
         Promise searchResultPromise = restClient.getSearchClient().searchJql(jql);
         return Optional.ofNullable((SearchResult) searchResultPromise.claim()).orElseThrow(() -> new Exception("No such issue"));
     }
-
 }
 

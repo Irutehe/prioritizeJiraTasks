@@ -22,6 +22,8 @@ public class MainApp {
                                 + "], Workload: " + getHoursFromSeconds(jiraStory.getEstimatedTestingMinutes()) + "h");
             }
         }
+
+        System.exit(0);
     }
 
     private static double getHoursFromSeconds(Integer workload) {

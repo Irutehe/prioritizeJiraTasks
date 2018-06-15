@@ -1,13 +1,9 @@
 package emag.storyMuncher;
 
-import com.atlassian.jira.rest.client.api.domain.Issue;
+class JiraSprint {
 
-import java.util.List;
-
-public class JiraSprint {
     private String name;
     private Integer remainingMinutes;
-    private List<Issue> readyForTestingIssuesList;
 
     String getName() {
         return name;
@@ -29,11 +25,9 @@ public class JiraSprint {
         return this;
     }
 
-    public List<Issue> getReadyForTestingIssuesList() {
-        return readyForTestingIssuesList;
-    }
-
-    public void setReadyForTestingIssuesList(List<Issue> readyForTestingIssuesList) {
-        this.readyForTestingIssuesList = readyForTestingIssuesList;
+    @Override
+    public String toString() {
+        return "name: \"" + name + "\"" +
+                ", remainingMinutes: " + remainingMinutes;
     }
 }

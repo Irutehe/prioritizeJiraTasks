@@ -1,6 +1,7 @@
 package emag.storyMuncher;
 
-public class JiraStory {
+class JiraStory {
+
     private String storyId;
     private Integer estimatedTestingMinutes;
     private String sprint;
@@ -26,7 +27,7 @@ public class JiraStory {
         return this;
     }
 
-    public String getSprint() {
+    String getSprint() {
         return sprint;
     }
 
@@ -44,5 +45,13 @@ public class JiraStory {
         this.priority = priority;
 
         return this;
+    }
+
+    @Override
+    public String toString() {
+        return "storyId: " + storyId +
+                ", estimatedTestingMinutes: " + estimatedTestingMinutes +
+                ", sprint: \"" + sprint + '\"' +
+                ", priority: " + priority;
     }
 }
