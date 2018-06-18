@@ -3,7 +3,7 @@ package emag.storyMuncher;
 class JiraSprint {
 
     private String name;
-    private Integer remainingMinutes;
+    private Integer remainingSeconds;
 
     String getName() {
         return name;
@@ -15,12 +15,12 @@ class JiraSprint {
         return this;
     }
 
-    Integer getRemainingMinutes() {
-        return remainingMinutes;
+    Integer getRemainingSeconds() {
+        return remainingSeconds;
     }
 
-    JiraSprint setRemainingMinutes(Integer remainingMinutes) {
-        this.remainingMinutes = remainingMinutes;
+    JiraSprint setRemainingSeconds(Integer remainingSeconds) {
+        this.remainingSeconds = remainingSeconds;
 
         return this;
     }
@@ -28,6 +28,6 @@ class JiraSprint {
     @Override
     public String toString() {
         return "name: \"" + name + "\"" +
-                ", remainingMinutes: " + remainingMinutes;
+                ", remainingSeconds: " + remainingSeconds;
     }
 }

@@ -75,7 +75,7 @@ class BestTestingPath {
             for (Issue issue : result.getIssues()) {
                 int storyEstimatedMinutes = getStoryEstimatedMinutes(issue);
                 Double storyPoints = getStoryPoints(issue);
-                Double priority = calculatePriority(sprint.getRemainingMinutes(), storyPoints, storyEstimatedMinutes);
+                Double priority = calculatePriority(sprint.getRemainingSeconds(), storyPoints, storyEstimatedMinutes);
 
                 JiraStory jiraStory = new JiraStory();
                 jiraStory.setStoryId(issue.getKey())
@@ -164,9 +164,9 @@ class BestTestingPath {
 
     private void writeConfigToFile() {
         //todo remove the code bellow when we are able to get sprints
-        JiraSprint sprint1 = new JiraSprint().setName("SCM-Σ Sprint 74 (07.05-30.06)").setRemainingMinutes(20000);
-        JiraSprint sprint2 = new JiraSprint().setName("SCM-Δ Sprint 80 (04.06-18.06)").setRemainingMinutes(20000);
-        JiraSprint sprint3 = new JiraSprint().setName("SCM-Γ Sprint 134 (11.06-25.06)").setRemainingMinutes(20000);
+        JiraSprint sprint1 = new JiraSprint().setName("SCM-Σ Sprint 74 (07.05-30.06)").setRemainingSeconds(20000);
+        JiraSprint sprint2 = new JiraSprint().setName("SCM-Δ Sprint 80 (04.06-18.06)").setRemainingSeconds(20000);
+        JiraSprint sprint3 = new JiraSprint().setName("SCM-Γ Sprint 134 (11.06-25.06)").setRemainingSeconds(20000);
         availableSprints.add(sprint1);
         availableSprints.add(sprint2);
         availableSprints.add(sprint3);
