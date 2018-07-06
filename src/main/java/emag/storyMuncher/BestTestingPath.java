@@ -18,8 +18,9 @@ class BestTestingPath {
     private List<JiraStory> priorityCalculatedIssues;
     private List<TestingResource> testingResources;
     private List<JiraSprint> availableSprints;
-    private JiraQueries jiraQueries = new JiraQueries();
+    private JiraQueries jiraQueries;
     private List<JiraStory> overflowIssues;
+    private Config config;
 
     BestTestingPath() {
         testingResources = new ArrayList<>();
@@ -42,7 +43,9 @@ class BestTestingPath {
 
     void initialize() {
 
-        loadConfigFromFile();
+        config = Config.getConfig();
+        setTestingResources(config.getTestingResources());
+        setJiraQueries(config.getJiraHost());
 
         loadSprintsFromApi();
 
@@ -52,28 +55,46 @@ class BestTestingPath {
                 setDetailsForTestingResource(qaEngineer, result);
             }
         }
-        for (JiraSprint sprint : availableSprints) {
-            populatePriorityCalculatedIssues(sprint);
-        }
+
         assignIssuesToEngineers();
     }
 
     private void assignIssuesToEngineers() {
-        while (!priorityCalculatedIssues.isEmpty()) {
-            sortPriorityCalculatedIssues();
-            JiraStory jiraStory = priorityCalculatedIssues.get(0);
-            sortTestingResourcesByWorkload();
-            testingResources.get(0).addWorkload(jiraStory.getEstimatedTestingMinutes()).addFutureStory(jiraStory.getStoryId());
-            priorityCalculatedIssues.remove(0);
+        for (JiraSprint sprint : availableSprints) {
+            populatePriorityCalculatedIssues(sprint);
         }
+
+        while (!priorityCalculatedIssues.isEmpty()) {
+            JiraStory jiraStory = getTopPriorityJiraStory();
+            TestingResource testingResource = getFirstAvailableTestingResource();
+            testingResource.addWorkload(jiraStory.getEstimatedTestingMinutes()).addFutureStory(jiraStory.getStoryId());
+            removeTopPriorityJiraStory();
+            recalculatePriority();
+        }
+    }
+
+    private void removeTopPriorityJiraStory() {
+        priorityCalculatedIssues.remove(0);
+    }
+
+    private JiraStory getTopPriorityJiraStory() {
+        sortPriorityCalculatedIssues();
+        return priorityCalculatedIssues.get(0);
+    }
+
+    private TestingResource getFirstAvailableTestingResource() {
+        sortTestingResourcesByWorkload();
+        return testingResources.get(0);
     }
 
     private void sortPriorityCalculatedIssues() {
         priorityCalculatedIssues.sort(Comparator.comparingDouble(JiraStory::getPriority));
     }
 
-    private void setAvailableSprints(List<JiraSprint> availableSprints) {
-        this.availableSprints = availableSprints;
+    private void loadSprintsFromApi(){
+
+        ApiClient apiClient = new ApiClient(config);
+        this.availableSprints = apiClient.getSprints();
     }
 
     private void populatePriorityCalculatedIssues(JiraSprint sprint) {
@@ -86,9 +107,10 @@ class BestTestingPath {
 
                 JiraStory jiraStory = new JiraStory();
                 jiraStory.setStoryId(issue.getKey())
-                        .setSprint(sprint.getName())
+                        .setSprint(sprint)
                         .setPriority(priority)
-                        .setEstimatedTestingMinutes(storyEstimatedMinutes);
+                        .setEstimatedTestingMinutes(storyEstimatedMinutes)
+                        .setStoryPoints(storyPoints);
 
                 if (priority >= 0) {
                     priorityCalculatedIssues.add(jiraStory);
@@ -99,8 +121,8 @@ class BestTestingPath {
         }
     }
 
-    private Double calculatePriority(int remainingMinutes, Double storyPoints, int storyEstimatedMinutes) {
-        return (remainingMinutes - storyEstimatedMinutes) / storyPoints;
+    private Double calculatePriority(int remainingSeconds, Double storyPoints, int storyEstimatedMinutes) {
+        return (remainingSeconds - storyEstimatedMinutes) / storyPoints;
     }
 
     private int getStoryEstimatedMinutes(Issue issue) {
@@ -158,106 +180,25 @@ class BestTestingPath {
         testingResources.sort(Comparator.comparingInt(TestingResource::getWorkload));
     }
 
-    private void loadConfigFromFile() {
-        JsonFileIO objectIO = new JsonFileIO();
-        if (!objectIO.checkConfigFile()) {
-            writeConfigToFile();
-        } else {
-            Config config = objectIO.ReadObjectFromFile();
-            // setAvailableSprints(config.getAvailableSprints());
-            setTestingResources(config.getTestingResources());
-        }
+    private void setJiraQueries(String jiraHost) {
+        this.jiraQueries = new JiraQueries(jiraHost);
     }
 
-    private void writeConfigToFile() {
-        //todo remove the code bellow when we are able to get sprints
-        JiraSprint sprint1 = new JiraSprint().setName("SCM-Σ Sprint 74 (07.05-30.06)").setRemainingSeconds(20000);
-        JiraSprint sprint2 = new JiraSprint().setName("SCM-Δ Sprint 80 (04.06-18.06)").setRemainingSeconds(20000);
-        JiraSprint sprint3 = new JiraSprint().setName("SCM-Γ Sprint 134 (11.06-25.06)").setRemainingSeconds(20000);
-        availableSprints.add(sprint1);
-        availableSprints.add(sprint2);
-        availableSprints.add(sprint3);
+    private void recalculatePriority() {
+        TestingResource testingResource = getFirstAvailableTestingResource();
+        for (JiraStory jiraStory : priorityCalculatedIssues) {
+            Double priority = calculatePriority(
+                    jiraStory.getSprint().getRemainingSeconds() - testingResource.getWorkload(),
+                    jiraStory.getStoryPoints(),
+                    jiraStory.getEstimatedTestingMinutes()
+            );
 
-        TestingResource testingResource2 = new TestingResource().setUserName("gabriela.preda");
-        testingResources.add(testingResource2);
-        TestingResource testingResource3 = new TestingResource().setUserName("ciprian.nitu");
-        testingResources.add(testingResource3);
-        TestingResource testingResource0 = new TestingResource().setUserName("bogdan.popa1");
-        testingResources.add(testingResource0);
-        TestingResource testingResource1 = new TestingResource().setUserName("armando.gavrila");
-        testingResources.add(testingResource1);
+            jiraStory.setPriority(priority);
 
-        Config config = new Config();
-        config.setAvailableSprints(availableSprints);
-        config.setTestingResources(testingResources);
-
-        JsonFileIO objectIO = new JsonFileIO();
-        objectIO.WriteObjectToFile(config);
-    }
-
-    private void loadSprintsFromApi(){
-        ApiClient api = new ApiClient();
-        JSONObject json ;
-        json = api.getSprints();
-        JSONArray object;
-        try {
-            object = json.getJSONArray("values");
-            System.out.println(object.toString());
-            for (int i = 0; i < object.length (); ++i) {
-
-                JSONObject obj = object.getJSONObject(i);
-                JiraSprint sprint = new JiraSprint();
-
-                sprint.setId(obj.getInt("id"));
-                sprint.setName(obj.getString("name"));
-                sprint.setStartDate(new DateTime(obj.getString("startDate")));
-                sprint.setEndDate(new DateTime(obj.getString("endDate")));
-                sprint.setGoal(obj.getString("goal"));
-
-                int workingDays = getWorkingDaysBetweenTwoDates(sprint.getStartDate().toDate(), sprint.getEndDate().toDate());
-
-                sprint.setRemainingSeconds(transformWorkingDaysToSeconds(workingDays));
-
-                this.availableSprints.add(sprint);
-
+            if (priority < 0) {
+                priorityCalculatedIssues.remove(jiraStory);
+                overflowIssues.add(jiraStory);
             }
-        } catch (Exception ex){
-            System.out.println(ex.getStackTrace());
         }
-    }
-
-    public static int transformWorkingDaysToSeconds(int workingDays){
-        int hoursPerDay = 8;
-        return workingDays * hoursPerDay * 3600;
-    }
-
-    public static int getWorkingDaysBetweenTwoDates(Date startDate, Date endDate) {
-        Calendar startCal = Calendar.getInstance();
-        startCal.setTime(startDate);
-
-        Calendar endCal = Calendar.getInstance();
-        endCal.setTime(endDate);
-
-        int workDays = 0;
-
-        //Return 0 if start and end are the same
-        if (startCal.getTimeInMillis() == endCal.getTimeInMillis()) {
-            return 0;
-        }
-
-        if (startCal.getTimeInMillis() > endCal.getTimeInMillis()) {
-            startCal.setTime(endDate);
-            endCal.setTime(startDate);
-        }
-
-        do {
-            //excluding start date
-            startCal.add(Calendar.DAY_OF_MONTH, 1);
-            if (startCal.get(Calendar.DAY_OF_WEEK) != Calendar.SATURDAY && startCal.get(Calendar.DAY_OF_WEEK) != Calendar.SUNDAY) {
-                ++workDays;
-            }
-        } while (startCal.getTimeInMillis() < endCal.getTimeInMillis()); //excluding end date
-
-        return workDays;
     }
 }

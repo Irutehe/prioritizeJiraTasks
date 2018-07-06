@@ -4,8 +4,9 @@ class JiraStory {
 
     private String storyId;
     private Integer estimatedTestingMinutes;
-    private String sprint;
+    private JiraSprint sprint;
     private Double priority;
+    private Double storyPoints;
 
     String getStoryId() {
         return storyId;
@@ -27,11 +28,11 @@ class JiraStory {
         return this;
     }
 
-    String getSprint() {
+    JiraSprint getSprint() {
         return sprint;
     }
 
-    JiraStory setSprint(String sprint) {
+    JiraStory setSprint(JiraSprint sprint) {
         this.sprint = sprint;
 
         return this;
@@ -53,5 +54,15 @@ class JiraStory {
                 ", estimatedTestingMinutes: " + estimatedTestingMinutes +
                 ", sprint: \"" + sprint + '\"' +
                 ", priority: " + priority;
+    }
+
+    public Double getStoryPoints() {
+        return this.storyPoints;
+    }
+
+    public JiraStory setStoryPoints(Double storyPoints) {
+        this.storyPoints = storyPoints;
+
+        return this;
     }
 }
