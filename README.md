@@ -1,6 +1,6 @@
 # prioritizeJiraTasks
 
-This app will help you prioritize testing tasks, giving you a best story points per sprint ratiu, should be usable to teams that work in sprints and use shared QA resources.
+This app will help you prioritize testing tasks, giving you a best story points per sprint ratio, should be usable to teams that work in sprints and use shared QA resources.
 
 ##Premises:
 - Each QA will only work on one task;

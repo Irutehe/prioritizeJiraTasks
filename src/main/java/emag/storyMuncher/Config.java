@@ -6,6 +6,7 @@ class Config {
 
     private List<TestingResource> testingResources;
     private List<JiraSprint> availableSprints;
+    private String jiraHost;
 
     List<TestingResource> getTestingResources() {
         return testingResources;
@@ -22,6 +23,12 @@ class Config {
     void setAvailableSprints(List<JiraSprint> availableSprints) {
         this.availableSprints = availableSprints;
     }
+
+    String getJiraHost() {
+        return jiraHost;
+    }
+    
+    void setJiraHost(String host) {this.jiraHost = host;}
 
     @Override
     public String toString() {

@@ -9,7 +9,11 @@ class JiraQueries {
     static final String ISSUE_FIELD_REMAINING_ESTIMATE = "timeestimate";
     static final String ISSUE_FIELD_STORY_POINTS = "customfield_10023";
     static final Long ISSUE_TYPE_TESTING_TASK = Long.valueOf("15");
-    private JiraConnection jira = new JiraConnection();
+    private JiraConnection jira;
+
+    JiraQueries(String jiraHost) {
+        this.jira = new JiraConnection(jiraHost);
+    }
 
     SearchResult getSearchResultReadyForTestingIssues(JiraSprint sprint) {
         SearchResult result = null;

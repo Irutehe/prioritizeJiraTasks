@@ -18,7 +18,7 @@ public class MainApp {
             for (JiraStory jiraStory:bestTestingPath.getOverflowIssues()) {
                 System.out.println(
                         jiraStory.getStoryId()
-                                + " [" + jiraStory.getSprint()
+                                + " [" + jiraStory.getSprint().getName()
                                 + "], Workload: " + getHoursFromSeconds(jiraStory.getEstimatedTestingMinutes()) + "h");
             }
         }

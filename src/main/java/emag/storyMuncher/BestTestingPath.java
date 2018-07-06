@@ -13,7 +13,7 @@ class BestTestingPath {
     private List<JiraStory> priorityCalculatedIssues;
     private List<TestingResource> testingResources;
     private List<JiraSprint> availableSprints;
-    private JiraQueries jiraQueries = new JiraQueries();
+    private JiraQueries jiraQueries;
     private List<JiraStory> overflowIssues;
 
     BestTestingPath() {
@@ -45,20 +45,36 @@ class BestTestingPath {
                 setDetailsForTestingResource(qaEngineer, result);
             }
         }
-        for (JiraSprint sprint : availableSprints) {
-            populatePriorityCalculatedIssues(sprint);
-        }
+
         assignIssuesToEngineers();
     }
 
     private void assignIssuesToEngineers() {
-        while (!priorityCalculatedIssues.isEmpty()) {
-            sortPriorityCalculatedIssues();
-            JiraStory jiraStory = priorityCalculatedIssues.get(0);
-            sortTestingResourcesByWorkload();
-            testingResources.get(0).addWorkload(jiraStory.getEstimatedTestingMinutes()).addFutureStory(jiraStory.getStoryId());
-            priorityCalculatedIssues.remove(0);
+        for (JiraSprint sprint : availableSprints) {
+            populatePriorityCalculatedIssues(sprint);
         }
+
+        while (!priorityCalculatedIssues.isEmpty()) {
+            JiraStory jiraStory = getTopPriorityJiraStory();
+            TestingResource testingResource = getFirstAvailableTestingResource();
+            testingResource.addWorkload(jiraStory.getEstimatedTestingMinutes()).addFutureStory(jiraStory.getStoryId());
+            removeTopPriorityJiraStory();
+            recalculatePriority();
+        }
+    }
+
+    private void removeTopPriorityJiraStory() {
+        priorityCalculatedIssues.remove(0);
+    }
+
+    private JiraStory getTopPriorityJiraStory() {
+        sortPriorityCalculatedIssues();
+        return priorityCalculatedIssues.get(0);
+    }
+
+    private TestingResource getFirstAvailableTestingResource() {
+        sortTestingResourcesByWorkload();
+        return testingResources.get(0);
     }
 
     private void sortPriorityCalculatedIssues() {
@@ -79,9 +95,10 @@ class BestTestingPath {
 
                 JiraStory jiraStory = new JiraStory();
                 jiraStory.setStoryId(issue.getKey())
-                        .setSprint(sprint.getName())
+                        .setSprint(sprint)
                         .setPriority(priority)
-                        .setEstimatedTestingMinutes(storyEstimatedMinutes);
+                        .setEstimatedTestingMinutes(storyEstimatedMinutes)
+                        .setStoryPoints(storyPoints);
 
                 if (priority >= 0) {
                     priorityCalculatedIssues.add(jiraStory);
@@ -92,8 +109,8 @@ class BestTestingPath {
         }
     }
 
-    private Double calculatePriority(int remainingMinutes, Double storyPoints, int storyEstimatedMinutes) {
-        return (remainingMinutes - storyEstimatedMinutes) / storyPoints;
+    private Double calculatePriority(int remainingSeconds, Double storyPoints, int storyEstimatedMinutes) {
+        return (remainingSeconds - storyEstimatedMinutes) / storyPoints;
     }
 
     private int getStoryEstimatedMinutes(Issue issue) {
@@ -159,14 +176,15 @@ class BestTestingPath {
             Config config = objectIO.ReadObjectFromFile();
             setAvailableSprints(config.getAvailableSprints());
             setTestingResources(config.getTestingResources());
+            setJiraQueries(config.getJiraHost());
         }
     }
 
     private void writeConfigToFile() {
         //todo remove the code bellow when we are able to get sprints
-        JiraSprint sprint1 = new JiraSprint().setName("SCM-Σ Sprint 74 (07.05-30.06)").setRemainingSeconds(20000);
-        JiraSprint sprint2 = new JiraSprint().setName("SCM-Δ Sprint 80 (04.06-18.06)").setRemainingSeconds(20000);
-        JiraSprint sprint3 = new JiraSprint().setName("SCM-Γ Sprint 134 (11.06-25.06)").setRemainingSeconds(20000);
+        JiraSprint sprint1 = new JiraSprint().setName("SCM-Σ Sprint 75 (04.07-1.10)").setRemainingSeconds(2000000);
+        JiraSprint sprint2 = new JiraSprint().setName("SCM-Δ Sprint 82 (02.07- 16.07)").setRemainingSeconds(200000);
+        JiraSprint sprint3 = new JiraSprint().setName("SCM-Γ Sprint 135 (26.06 -9.07)").setRemainingSeconds(200000);
         availableSprints.add(sprint1);
         availableSprints.add(sprint2);
         availableSprints.add(sprint3);
@@ -179,12 +197,38 @@ class BestTestingPath {
         testingResources.add(testingResource0);
         TestingResource testingResource1 = new TestingResource().setUserName("armando.gavrila");
         testingResources.add(testingResource1);
+        TestingResource testingResource4 = new TestingResource().setUserName("alina.ene");
+        testingResources.add(testingResource4);
 
         Config config = new Config();
         config.setAvailableSprints(availableSprints);
         config.setTestingResources(testingResources);
+        config.setJiraHost("https://jira.emag.network");
+        setJiraQueries(config.getJiraHost());
 
         JsonFileIO objectIO = new JsonFileIO();
         objectIO.WriteObjectToFile(config);
+    }
+
+    private void setJiraQueries(String jiraHost) {
+        this.jiraQueries = new JiraQueries(jiraHost);
+    }
+
+    private void recalculatePriority() {
+        TestingResource testingResource = getFirstAvailableTestingResource();
+        for (JiraStory jiraStory : priorityCalculatedIssues) {
+            Double priority = calculatePriority(
+                    jiraStory.getSprint().getRemainingSeconds() - testingResource.getWorkload(),
+                    jiraStory.getStoryPoints(),
+                    jiraStory.getEstimatedTestingMinutes()
+            );
+
+            jiraStory.setPriority(priority);
+
+            if (priority < 0) {
+                priorityCalculatedIssues.remove(jiraStory);
+                overflowIssues.add(jiraStory);
+            }
+        }
     }
 }

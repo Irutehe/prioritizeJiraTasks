@@ -13,10 +13,10 @@ import com.atlassian.util.concurrent.Promise;
 class JiraConnection {
     private JiraRestClient restClient;
 
-    JiraConnection() {
+    JiraConnection(String jiraHost) {
         URI jiraServerUri = null;
         try {
-            jiraServerUri = new URI("https://jira.emag.network");
+            jiraServerUri = new URI(jiraHost);
         } catch (URISyntaxException ex) {
             System.out.println("URI exception " + ex.getMessage() + ex.getReason());
         }
