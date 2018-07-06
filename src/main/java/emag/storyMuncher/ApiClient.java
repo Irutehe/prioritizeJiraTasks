@@ -20,8 +20,8 @@ public class ApiClient {
         JSONObject json =  new JSONObject();
 
         try {
-            URL url = new URL ("https://jira.emag.network/rest/agile/1.0/board/8/sprint?state=active");
-            String encoding = Base64.getEncoder().encodeToString(("dashboard.qa:parolaQA1.").getBytes());
+            URL url = new URL ("https://...../rest/agile/1.0/board/8/sprint?state=active");
+            String encoding = Base64.getEncoder().encodeToString(("user:pass").getBytes());
 
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
