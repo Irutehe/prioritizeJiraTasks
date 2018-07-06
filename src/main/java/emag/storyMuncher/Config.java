@@ -65,7 +65,7 @@ class Config {
         return config;
     }
 
-    static void writeDefaultConfigToFile() {
+    private static void writeDefaultConfigToFile() {
 
         TestingResource testingResource2 = new TestingResource().setUserName("user.name");
         List<TestingResource> testingResources = new ArrayList<>();
