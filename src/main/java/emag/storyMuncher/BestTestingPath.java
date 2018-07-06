@@ -4,10 +4,15 @@ import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.IssueField;
 import com.atlassian.jira.rest.client.api.domain.SearchResult;
 import com.atlassian.jira.rest.client.api.domain.Subtask;
+import com.google.gson.JsonObject;
+import org.codehaus.jettison.json.JSONArray;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
+import org.joda.time.DateTime;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import javax.swing.*;
+import java.io.IOException;
+import java.util.*;
 
 class BestTestingPath {
     private List<JiraStory> priorityCalculatedIssues;
@@ -15,6 +20,7 @@ class BestTestingPath {
     private List<JiraSprint> availableSprints;
     private JiraQueries jiraQueries;
     private List<JiraStory> overflowIssues;
+    private Config config;
 
     BestTestingPath() {
         testingResources = new ArrayList<>();
@@ -37,7 +43,11 @@ class BestTestingPath {
 
     void initialize() {
 
-        loadConfigFromFile();
+        config = Config.getConfig();
+        setTestingResources(config.getTestingResources());
+        setJiraQueries(config.getJiraHost());
+
+        loadSprintsFromApi();
 
         for (TestingResource qaEngineer : testingResources) {
             SearchResult result = jiraQueries.getSearchResultForOpenTestingIssues(qaEngineer);
@@ -81,8 +91,10 @@ class BestTestingPath {
         priorityCalculatedIssues.sort(Comparator.comparingDouble(JiraStory::getPriority));
     }
 
-    private void setAvailableSprints(List<JiraSprint> availableSprints) {
-        this.availableSprints = availableSprints;
+    private void loadSprintsFromApi(){
+
+        ApiClient apiClient = new ApiClient(config);
+        this.availableSprints = apiClient.getSprints();
     }
 
     private void populatePriorityCalculatedIssues(JiraSprint sprint) {
@@ -166,48 +178,6 @@ class BestTestingPath {
 
     private void sortTestingResourcesByWorkload() {
         testingResources.sort(Comparator.comparingInt(TestingResource::getWorkload));
-    }
-
-    private void loadConfigFromFile() {
-        JsonFileIO objectIO = new JsonFileIO();
-        if (!objectIO.checkConfigFile()) {
-            writeConfigToFile();
-        } else {
-            Config config = objectIO.ReadObjectFromFile();
-            setAvailableSprints(config.getAvailableSprints());
-            setTestingResources(config.getTestingResources());
-            setJiraQueries(config.getJiraHost());
-        }
-    }
-
-    private void writeConfigToFile() {
-        //todo remove the code bellow when we are able to get sprints
-        JiraSprint sprint1 = new JiraSprint().setName("SCM-Σ Sprint 75 (04.07-1.10)").setRemainingSeconds(2000000);
-        JiraSprint sprint2 = new JiraSprint().setName("SCM-Δ Sprint 82 (02.07- 16.07)").setRemainingSeconds(200000);
-        JiraSprint sprint3 = new JiraSprint().setName("SCM-Γ Sprint 135 (26.06 -9.07)").setRemainingSeconds(200000);
-        availableSprints.add(sprint1);
-        availableSprints.add(sprint2);
-        availableSprints.add(sprint3);
-
-        TestingResource testingResource2 = new TestingResource().setUserName("gabriela.preda");
-        testingResources.add(testingResource2);
-        TestingResource testingResource3 = new TestingResource().setUserName("ciprian.nitu");
-        testingResources.add(testingResource3);
-        TestingResource testingResource0 = new TestingResource().setUserName("bogdan.popa1");
-        testingResources.add(testingResource0);
-        TestingResource testingResource1 = new TestingResource().setUserName("armando.gavrila");
-        testingResources.add(testingResource1);
-        TestingResource testingResource4 = new TestingResource().setUserName("alina.ene");
-        testingResources.add(testingResource4);
-
-        Config config = new Config();
-        config.setAvailableSprints(availableSprints);
-        config.setTestingResources(testingResources);
-        config.setJiraHost("https://jira.emag.network");
-        setJiraQueries(config.getJiraHost());
-
-        JsonFileIO objectIO = new JsonFileIO();
-        objectIO.WriteObjectToFile(config);
     }
 
     private void setJiraQueries(String jiraHost) {
