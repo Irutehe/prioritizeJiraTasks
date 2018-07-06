@@ -4,10 +4,15 @@ import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.IssueField;
 import com.atlassian.jira.rest.client.api.domain.SearchResult;
 import com.atlassian.jira.rest.client.api.domain.Subtask;
+import com.google.gson.JsonObject;
+import org.codehaus.jettison.json.JSONArray;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
+import org.joda.time.DateTime;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import javax.swing.*;
+import java.io.IOException;
+import java.util.*;
 
 class BestTestingPath {
     private List<JiraStory> priorityCalculatedIssues;
@@ -38,6 +43,8 @@ class BestTestingPath {
     void initialize() {
 
         loadConfigFromFile();
+
+        loadSprintsFromApi();
 
         for (TestingResource qaEngineer : testingResources) {
             SearchResult result = jiraQueries.getSearchResultForOpenTestingIssues(qaEngineer);
@@ -157,7 +164,7 @@ class BestTestingPath {
             writeConfigToFile();
         } else {
             Config config = objectIO.ReadObjectFromFile();
-            setAvailableSprints(config.getAvailableSprints());
+            // setAvailableSprints(config.getAvailableSprints());
             setTestingResources(config.getTestingResources());
         }
     }
@@ -186,5 +193,71 @@ class BestTestingPath {
 
         JsonFileIO objectIO = new JsonFileIO();
         objectIO.WriteObjectToFile(config);
+    }
+
+    private void loadSprintsFromApi(){
+        ApiClient api = new ApiClient();
+        JSONObject json ;
+        json = api.getSprints();
+        JSONArray object;
+        try {
+            object = json.getJSONArray("values");
+            System.out.println(object.toString());
+            for (int i = 0; i < object.length (); ++i) {
+
+                JSONObject obj = object.getJSONObject(i);
+                JiraSprint sprint = new JiraSprint();
+
+                sprint.setId(obj.getInt("id"));
+                sprint.setName(obj.getString("name"));
+                sprint.setStartDate(new DateTime(obj.getString("startDate")));
+                sprint.setEndDate(new DateTime(obj.getString("endDate")));
+                sprint.setGoal(obj.getString("goal"));
+
+                int workingDays = getWorkingDaysBetweenTwoDates(sprint.getStartDate().toDate(), sprint.getEndDate().toDate());
+
+                sprint.setRemainingSeconds(transformWorkingDaysToSeconds(workingDays));
+
+                this.availableSprints.add(sprint);
+
+            }
+        } catch (Exception ex){
+            System.out.println(ex.getStackTrace());
+        }
+    }
+
+    public static int transformWorkingDaysToSeconds(int workingDays){
+        int hoursPerDay = 8;
+        return workingDays * hoursPerDay * 3600;
+    }
+
+    public static int getWorkingDaysBetweenTwoDates(Date startDate, Date endDate) {
+        Calendar startCal = Calendar.getInstance();
+        startCal.setTime(startDate);
+
+        Calendar endCal = Calendar.getInstance();
+        endCal.setTime(endDate);
+
+        int workDays = 0;
+
+        //Return 0 if start and end are the same
+        if (startCal.getTimeInMillis() == endCal.getTimeInMillis()) {
+            return 0;
+        }
+
+        if (startCal.getTimeInMillis() > endCal.getTimeInMillis()) {
+            startCal.setTime(endDate);
+            endCal.setTime(startDate);
+        }
+
+        do {
+            //excluding start date
+            startCal.add(Calendar.DAY_OF_MONTH, 1);
+            if (startCal.get(Calendar.DAY_OF_WEEK) != Calendar.SATURDAY && startCal.get(Calendar.DAY_OF_WEEK) != Calendar.SUNDAY) {
+                ++workDays;
+            }
+        } while (startCal.getTimeInMillis() < endCal.getTimeInMillis()); //excluding end date
+
+        return workDays;
     }
 }
