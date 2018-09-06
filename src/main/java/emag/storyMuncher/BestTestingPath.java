@@ -128,9 +128,13 @@ class BestTestingPath {
     private int getStoryEstimatedMinutes(Issue issue) {
         int storyEstimatedMinutes = 0;
         Iterable<Issue> testingIssueList = getSubtaskTestingIssue(issue);
-        for (Issue testingIssue : testingIssueList) {
-            storyEstimatedMinutes = getTaskEstimatedMinutes(storyEstimatedMinutes, testingIssue);
+
+        if(testingIssueList != null){
+            for (Issue testingIssue : testingIssueList) {
+                storyEstimatedMinutes = getTaskEstimatedMinutes(storyEstimatedMinutes, testingIssue);
+            }
         }
+
         return storyEstimatedMinutes;
     }
 
@@ -152,7 +156,9 @@ class BestTestingPath {
                 }
             }
         }
-
+        if(issueKeys.isEmpty()){
+            return null;
+        }
         SearchResult result = jiraQueries.getIssuesByKey(issueKeys);
         return result.getIssues();
     }
