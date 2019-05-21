@@ -123,9 +123,13 @@ class BestTestingPath {
     private int getStoryEstimatedMinutes(Issue issue) {
         int storyEstimatedMinutes = 0;
         Iterable<Issue> testingIssueList = getSubtaskTestingIssue(issue);
-        for (Issue testingIssue : testingIssueList) {
-            storyEstimatedMinutes = getTaskEstimatedMinutes(storyEstimatedMinutes, testingIssue);
+
+        if (testingIssueList != null) {
+            for (Issue testingIssue : testingIssueList) {
+                storyEstimatedMinutes = getTaskEstimatedMinutes(storyEstimatedMinutes, testingIssue);
+            }
         }
+
         return storyEstimatedMinutes;
     }
 
