@@ -38,6 +38,7 @@ class JiraQueries {
         } catch (Exception ex) {
             System.out.println("URI exception " + ex.getMessage());
         }
+
         return result;
     }
 

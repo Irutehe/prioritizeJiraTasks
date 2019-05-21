@@ -4,15 +4,10 @@ import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.IssueField;
 import com.atlassian.jira.rest.client.api.domain.SearchResult;
 import com.atlassian.jira.rest.client.api.domain.Subtask;
-import com.google.gson.JsonObject;
-import org.codehaus.jettison.json.JSONArray;
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONObject;
-import org.joda.time.DateTime;
 
-import javax.swing.*;
-import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 class BestTestingPath {
     private List<JiraStory> priorityCalculatedIssues;
@@ -143,18 +138,23 @@ class BestTestingPath {
     }
 
     private Iterable<Issue> getSubtaskTestingIssue(Issue issue) {
-        Iterable<Subtask> subtasks = issue.getSubtasks();
+        Iterable<Subtask> subTasks = issue.getSubtasks();
         List<String> issueKeys = new ArrayList<>();
-        if (subtasks != null) {
-            for (Subtask subtask : subtasks) {
-                if (subtask.getIssueType().getId().equals(JiraQueries.ISSUE_TYPE_TESTING_TASK)) {
-                    issueKeys.add(subtask.getIssueKey());
-                }
+
+        for (Subtask subtask : subTasks) {
+            if (subtask.getIssueType().getId().equals(JiraQueries.ISSUE_TYPE_TESTING_TASK)) {
+                issueKeys.add(subtask.getIssueKey());
             }
         }
 
-        SearchResult result = jiraQueries.getIssuesByKey(issueKeys);
-        return result.getIssues();
+        Iterable<Issue> issues = new ArrayList<>();
+
+        if (!issueKeys.isEmpty()) {
+            SearchResult result = jiraQueries.getIssuesByKey(issueKeys);
+            issues = result.getIssues();
+        }
+
+        return issues;
     }
 
     private Double getStoryPoints(Issue issue) {
